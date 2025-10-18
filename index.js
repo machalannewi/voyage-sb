@@ -217,12 +217,15 @@ client.on("guildMemberAdd", async (member) => {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "Africa/Lagos", // Your timezone (Port Harcourt, Nigeria)
     });
     const time = now.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
+      timeZone: "Africa/Lagos", // Your timezone
     });
+    console.log(time);
 
     // Send DM with copyable format
     await user.send({
