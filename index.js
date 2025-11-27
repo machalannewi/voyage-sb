@@ -114,7 +114,7 @@ client.on("ready", async () => {
     `${colors.green}Logged in as ${colors.bright}${client.user.username}${colors.reset}${colors.green} | ID: ${client.user.id}${colors.reset}`
   );
   console.log(
-    `${colors.cyan}Target user ID: ${process.env.userID}${colors.reset}`
+    `${colors.cyan}Target user IDs: ${process.env.userID}, ${process.env.userID2}${colors.reset}`
   );
 
   await loadMonitoredServers();
@@ -133,7 +133,12 @@ client.on("ready", async () => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.id === client.user.id) return;
-  if (message.author.id !== process.env.userID) return;
+  // Accept commands from both users
+  if (
+    message.author.id !== process.env.userID &&
+    message.author.id !== process.env.userID2
+  )
+    return;
 
   // List command to show monitored servers
   if (message.content.toLowerCase().startsWith("list")) {
@@ -205,8 +210,8 @@ When users join, I'll send you a DM with copyable username and user ID.
 client.on("guildMemberAdd", async (member) => {
   // Monitor member joins in all monitored servers
   if (!monitoredServers.has(member.guild.id)) return;
+
   try {
-    const user = await client.users.fetch(process.env.userID);
     const username = member.user.username;
     const userId = member.user.id;
     const guildName = member.guild.name;
@@ -227,18 +232,42 @@ client.on("guildMemberAdd", async (member) => {
     });
     console.log(time);
 
-    // Send DM with copyable format
-    await user.send({
-      content: `🎉 **New Member Joined!**
+    const notificationMessage = `🎉 **New Member Joined!**
      
 📆 **Date:** ${date}
 🕐 **Time:** ${time}
 👤 **Username:** \`${username}\`
 🆔 **User ID:** \`${userId}\`
-🏠 **Server:** ${guildName}`,
-    });
+🏠 **Server:** ${guildName}`;
+
+    // Send to first user
+    try {
+      const user1 = await client.users.fetch(process.env.userID);
+      await user1.send({ content: notificationMessage });
+      console.log(`✅ Notification sent to user 1: ${process.env.userID}`);
+    } catch (err) {
+      console.error(
+        `${colors.yellow}Failed to send DM to user 1:${colors.reset}`,
+        err
+      );
+    }
+
+    // Send to second user
+    try {
+      const user2 = await client.users.fetch(process.env.userID2);
+      await user2.send({ content: notificationMessage });
+      console.log(`✅ Notification sent to user 2: ${process.env.userID2}`);
+    } catch (err) {
+      console.error(
+        `${colors.yellow}Failed to send DM to user 2:${colors.reset}`,
+        err
+      );
+    }
   } catch (err) {
-    console.error(`${colors.yellow}Failed to send DM:${colors.reset}`, err);
+    console.error(
+      `${colors.yellow}Failed to process member join:${colors.reset}`,
+      err
+    );
   }
 });
 
@@ -255,14 +284,21 @@ client.on("guildCreate", async (guild) => {
     `✅ Auto-added new server to monitoring: ${guild.name} (ID: ${guild.id})`
   );
 
-  // Notify the target user
+  const notificationText = `🤖 I've joined and started monitoring **${guild.name}**. I'll notify you of new members joining.`;
+
+  // Notify both users
   try {
-    const user = await client.users.fetch(process.env.userID);
-    await user.send(
-      `🤖 I've joined and started monitoring **${guild.name}**. I'll notify you of new members joining.`
-    );
+    const user1 = await client.users.fetch(process.env.userID);
+    await user1.send(notificationText);
   } catch (err) {
-    console.error("Failed to notify user about new server:", err);
+    console.error("Failed to notify user 1 about new server:", err);
+  }
+
+  try {
+    const user2 = await client.users.fetch(process.env.userID2);
+    await user2.send(notificationText);
+  } catch (err) {
+    console.error("Failed to notify user 2 about new server:", err);
   }
 });
 
@@ -275,14 +311,21 @@ client.on("guildDelete", async (guild) => {
       `${colors.yellow}Removed server from monitoring: ${colors.bright}${guild.name}${colors.reset}${colors.yellow} (ID: ${guild.id}) - Bot was removed${colors.reset}`
     );
 
-    // Notify owner
+    const removalText = `❌ I was removed from server: **${guild.name}** (ID: ${guild.id}) and stopped monitoring it`;
+
+    // Notify both users
     try {
-      const user = await client.users.fetch(process.env.userID);
-      await user.send(
-        `❌ I was removed from server: **${guild.name}** (ID: ${guild.id}) and stopped monitoring it`
-      );
+      const user1 = await client.users.fetch(process.env.userID);
+      await user1.send(removalText);
     } catch (err) {
-      console.error("Failed to notify owner about server removal:", err);
+      console.error("Failed to notify user 1 about server removal:", err);
+    }
+
+    try {
+      const user2 = await client.users.fetch(process.env.userID2);
+      await user2.send(removalText);
+    } catch (err) {
+      console.error("Failed to notify user 2 about server removal:", err);
     }
   }
 });
