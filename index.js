@@ -33,15 +33,18 @@ app.listen(port, () => {
 function keepAlive() {
   const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
 
-  setInterval(() => {
-    fetch(url)
-      .then((response) => {
-        console.log(`Keep-alive ping successful: ${response.status}`);
-      })
-      .catch((err) => {
-        console.log("Keep-alive ping failed:", err.message);
-      });
-  }, 14 * 60 * 1000); // 14 minutes
+  setInterval(
+    () => {
+      fetch(url)
+        .then((response) => {
+          console.log(`Keep-alive ping successful: ${response.status}`);
+        })
+        .catch((err) => {
+          console.log("Keep-alive ping failed:", err.message);
+        });
+    },
+    14 * 60 * 1000,
+  ); // 14 minutes
 }
 
 // File to store monitored servers
@@ -90,13 +93,13 @@ async function addAllServersToMonitoring() {
     console.log(
       `Processing ${++processedCount}/${client.guilds.cache.size}: ${
         guild.name
-      }`
+      }`,
     );
 
     // Add all servers to monitoring
     monitoredServers.add(guild.id);
     console.log(
-      `✅ Added server to monitoring: ${guild.name} (ID: ${guild.id})`
+      `✅ Added server to monitoring: ${guild.name} (ID: ${guild.id})`,
     );
 
     // Add small delay to avoid rate limiting
@@ -105,16 +108,16 @@ async function addAllServersToMonitoring() {
 
   await saveMonitoredServers();
   console.log(
-    `🎯 Setup complete! Monitoring all ${monitoredServers.size} servers`
+    `🎯 Setup complete! Monitoring all ${monitoredServers.size} servers`,
   );
 }
 
 client.on("ready", async () => {
   console.log(
-    `${colors.green}Logged in as ${colors.bright}${client.user.username}${colors.reset}${colors.green} | ID: ${client.user.id}${colors.reset}`
+    `${colors.green}Logged in as ${colors.bright}${client.user.username}${colors.reset}${colors.green} | ID: ${client.user.id}${colors.reset}`,
   );
   console.log(
-    `${colors.cyan}Target user ID: ${process.env.userID}${colors.reset}`
+    `${colors.cyan}Target user ID: ${process.env.userID}${colors.reset}`,
   );
 
   await loadMonitoredServers();
@@ -139,7 +142,7 @@ client.on("messageCreate", async (message) => {
   if (message.content.toLowerCase().startsWith("list")) {
     if (monitoredServers.size === 0) {
       return message.reply(
-        "I'm not monitoring any servers yet. Use the 'refresh' command to add all servers to monitoring!"
+        "I'm not monitoring any servers yet. Use the 'refresh' command to add all servers to monitoring!",
       );
     }
 
@@ -161,7 +164,7 @@ client.on("messageCreate", async (message) => {
     message.reply("🔄 Adding all servers to monitoring...");
     await addAllServersToMonitoring();
     message.reply(
-      `✅ Complete! Now monitoring all ${monitoredServers.size} servers.`
+      `✅ Complete! Now monitoring all ${monitoredServers.size} servers.`,
     );
   }
 
@@ -170,7 +173,7 @@ client.on("messageCreate", async (message) => {
     const args = message.content.split(" ");
     if (args.length < 3) {
       return message.reply(
-        "Usage: `copy <username> <userId>` - Sends formatted user info"
+        "Usage: `copy <username> <userId>` - Sends formatted user info",
       );
     }
 
@@ -245,21 +248,21 @@ client.on("guildMemberAdd", async (member) => {
 // When bot joins a new server, automatically add it to monitoring
 client.on("guildCreate", async (guild) => {
   console.log(
-    `${colors.green}Joined new server: ${colors.bright}${guild.name}${colors.reset}${colors.green} (ID: ${guild.id})${colors.reset}`
+    `${colors.green}Joined new server: ${colors.bright}${guild.name}${colors.reset}${colors.green} (ID: ${guild.id})${colors.reset}`,
   );
 
   // Automatically add new server to monitoring
   monitoredServers.add(guild.id);
   await saveMonitoredServers();
   console.log(
-    `✅ Auto-added new server to monitoring: ${guild.name} (ID: ${guild.id})`
+    `✅ Auto-added new server to monitoring: ${guild.name} (ID: ${guild.id})`,
   );
 
   // Notify the target user
   try {
     const user = await client.users.fetch(process.env.userID);
     await user.send(
-      `🤖 I've joined and started monitoring **${guild.name}**. I'll notify you of new members joining.`
+      `🤖 I've joined and started monitoring **${guild.name}**. I'll notify you of new members joining.`,
     );
   } catch (err) {
     console.error("Failed to notify user about new server:", err);
@@ -272,14 +275,14 @@ client.on("guildDelete", async (guild) => {
     monitoredServers.delete(guild.id);
     await saveMonitoredServers();
     console.log(
-      `${colors.yellow}Removed server from monitoring: ${colors.bright}${guild.name}${colors.reset}${colors.yellow} (ID: ${guild.id}) - Bot was removed${colors.reset}`
+      `${colors.yellow}Removed server from monitoring: ${colors.bright}${guild.name}${colors.reset}${colors.yellow} (ID: ${guild.id}) - Bot was removed${colors.reset}`,
     );
 
     // Notify owner
     try {
       const user = await client.users.fetch(process.env.userID);
       await user.send(
-        `❌ I was removed from server: **${guild.name}** (ID: ${guild.id}) and stopped monitoring it`
+        `❌ I was removed from server: **${guild.name}** (ID: ${guild.id}) and stopped monitoring it`,
       );
     } catch (err) {
       console.error("Failed to notify owner about server removal:", err);
